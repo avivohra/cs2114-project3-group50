@@ -95,4 +95,41 @@ public class SnakeGameTest {
         Position newApple = seeded.getApplePosition();
         assertFalse(newApple.getRow() == 8 && newApple.getColumn() == 14);
     }
+
+    @Test
+    void testGetSnakeSizeInitial() {
+        assertEquals(2, game.getSnakeSize());
+    }
+    
+    @Test
+    void testGetSnakeSizeAfterMovement() {
+        game.step();
+    
+        assertEquals(2, game.getSnakeSize());
+    }
+    
+    @Test
+    void testGetSnakeSizeAfterMultipleMovements() {
+        game.step();
+        game.step();
+        game.step();
+    
+        assertEquals(2, game.getSnakeSize());
+    }
+    
+    @Test
+    void testGetSnakeSizeAfterEatingApple() {
+        SnakeGame seeded = new SnakeGame(12345L);
+    
+        seeded.changeDirection(Direction.DOWN);
+        seeded.step();
+    
+        seeded.changeDirection(Direction.RIGHT);
+    
+        while (seeded.getScore() == 0 && !seeded.isGameOver()) {
+            seeded.step();
+        }
+    
+        assertEquals(3, seeded.getSnakeSize());
+    }
 }
