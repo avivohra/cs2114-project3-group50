@@ -154,6 +154,15 @@ public class SnakeGame {
         return list;
     }
 
+    /**
+     * Returns the current number of positions in the snake.
+     *
+     * @return the snake body size
+     */
+    int getSnakeSize() {
+        return snake.getSize();
+    }
+    
     /** Helper: current snake length. */
     /** Places an apple on a random empty cell. */
     private void spawnApple() {
