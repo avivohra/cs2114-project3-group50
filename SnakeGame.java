@@ -1,13 +1,13 @@
-/** Model for a terminal snake game. */
+/** Model for a terminal snake game. No I/O performed. */
 import java.util.List;
 import java.util.Random;
 
-/** Model for a terminal snake game. No I/O performed. */
 public class SnakeGame {
     private LinkedQueue<Position> snake;
     private Position apple;
     private Direction direction;
     private Direction pendingDirection;
+    private Position currentHead;
     private int score;
     private boolean gameOver;
     private final int width;
@@ -15,29 +15,14 @@ public class SnakeGame {
     private final boolean[][] occupied;
     private final Random rand;
 
-    /** Default 15×15 board with a 2‑segment snake spawned near centre. */
-    /** Default constructor creates a game with nondeterministic apple placement. */
+    /** Default 15x15 board with true random apple placement. */
     public SnakeGame() {
         this.width = 15;
         this.height = 15;
         this.occupied = new boolean[height][width];
         this.snake = new LinkedQueue<>();
-        this.rand = new Random();
-        // centre position
-        int centerRow = height / 2;
-        int centerCol = width / 2;
-        // initial direction right, tail to the left of head
-        Position tailPos = new Position(centerRow, centerCol - 1);
-        Position headPos = new Position(centerRow, centerCol);
-        snake.enqueue(tailPos);
-        occupied[tailPos.getRow()][tailPos.getColumn()] = true;
-        snake.enqueue(headPos);
-        occupied[headPos.getRow()][headPos.getColumn()] = true;
-        this.direction = Direction.RIGHT;
-        this.pendingDirection = this.direction;
-        this.score = 0;
-        this.gameOver = false;
-        spawnApple();
+        this.rand = new Random(); // True random for live play
+        initializeGame();
     }
 
     /** Constructor with explicit random seed for deterministic testing. */
@@ -46,8 +31,11 @@ public class SnakeGame {
         this.height = 15;
         this.occupied = new boolean[height][width];
         this.snake = new LinkedQueue<>();
-        this.rand = new Random(randomSeed);
-        // centre position
+        this.rand = new Random(randomSeed); // Seeded for JUnit tests
+        initializeGame();
+    }
+
+    private void initializeGame() {
         int centerRow = height / 2;
         int centerCol = width / 2;
         Position tailPos = new Position(centerRow, centerCol - 1);
@@ -58,6 +46,7 @@ public class SnakeGame {
         occupied[headPos.getRow()][headPos.getColumn()] = true;
         this.direction = Direction.RIGHT;
         this.pendingDirection = this.direction;
+        this.currentHead = headPos;
         this.score = 0;
         this.gameOver = false;
         spawnApple();
@@ -69,44 +58,50 @@ public class SnakeGame {
             return;
         }
         direction = pendingDirection;
-        Position head = snake.peek();
-        int newRow = head.getRow();
-        int newCol = head.getColumn();
+        int newRow = currentHead.getRow();
+        int newCol = currentHead.getColumn();
         switch (direction) {
             case UP -> newRow--;
             case DOWN -> newRow++;
             case LEFT -> newCol--;
             case RIGHT -> newCol++;
         }
-        // wall collision
+
+        // Wall collision
         if (newRow < 0 || newRow >= height || newCol < 0 || newCol >= width) {
             gameOver = true;
             return;
         }
-        // self collision
+
+        // Self collision check (accounting for tail movement if not eating)
+        boolean willEat = (apple != null && newRow == apple.getRow() && newCol == apple.getColumn());
         if (occupied[newRow][newCol]) {
-            gameOver = true;
-            return;
+            Position tail = snake.peek();
+            boolean isTail = (!willEat && tail != null && tail.getRow() == newRow && tail.getColumn() == newCol);
+            if (!isTail) {
+                gameOver = true;
+                return;
+            }
         }
-        // advance head
+
+        // Advance head
         Position newHead = new Position(newRow, newCol);
+        currentHead = newHead;
         snake.enqueue(newHead);
         occupied[newRow][newCol] = true;
-        // apple handling
-        if (apple != null && newRow == apple.getRow() && newCol == apple.getColumn()) {
+
+        // Apple handling
+        if (willEat) {
             score++;
             apple = null;
-            // spawn new apple if space remains
             if (snake.getSize() < width * height) {
                 spawnApple();
             } else {
-                // board filled – game over
                 gameOver = true;
             }
         } else {
-            // normal move – remove tail
-            Position tail = snake.dequeue();
-            occupied[tail.getRow()][tail.getColumn()] = false;
+            Position removedTail = snake.dequeue();
+            occupied[removedTail.getRow()][removedTail.getColumn()] = false;
         }
     }
 
@@ -115,7 +110,6 @@ public class SnakeGame {
         if (newDir == null) {
             return;
         }
-        // reject direct opposite moves
         if (direction == Direction.UP && newDir == Direction.DOWN) return;
         if (direction == Direction.DOWN && newDir == Direction.UP) return;
         if (direction == Direction.LEFT && newDir == Direction.RIGHT) return;
@@ -154,17 +148,10 @@ public class SnakeGame {
         return list;
     }
 
-    /**
-     * Returns the current number of positions in the snake.
-     *
-     * @return the snake body size
-     */
     int getSnakeSize() {
         return snake.getSize();
     }
-    
-    /** Helper: current snake length. */
-    /** Places an apple on a random empty cell. */
+
     private void spawnApple() {
         int emptyCount = width * height - snake.getSize();
         if (emptyCount <= 0) {
@@ -184,5 +171,19 @@ public class SnakeGame {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the current tick delay in milliseconds based on the score.
+     * Implements the Speed Levels change feature (faster as score rises).
+     * 
+     * @return delay in milliseconds
+     */
+    public long getTickDelay() {
+        int level = score / 5; // Speed increases every 5 points
+        long baseDelay = 300L;
+        long minDelay = 80L;
+        long delay = baseDelay - (level * 40L);
+        return Math.max(minDelay, delay);
     }
 }

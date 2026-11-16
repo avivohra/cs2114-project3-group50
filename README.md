@@ -1,42 +1,27 @@
-# Terminal Snake - Deliverable 3
+# Terminal Snake - Deliverable 4
 
-## How to Run
-- The model is fully independent. Verify functionality by executing the JUnit 5 suite `SnakeGameTest.java`. The test exercises the entire game loop (`step()`, apple consumption, wall/self collisions) without any reliance on `TerminalView` or `SnakeController`. The visual game cannot be launched yet because those components remain stubbed.
+## How to Compile and Run
+- **To play the game:** Run `javac *.java` followed by `java SnakeController`. Control the snake by typing `w`, `a`, `s`, or `d` and pressing Enter.
+- **To run the tests:** Execute the JUnit 5 test suite in `SnakeGameTest.java` via your IDE. Tests exercise the model independently of the view.
 
 ## Reflection
-- **What changed from your specification?**
-	- Added `public int getSize()` to `LinkedQueue` for O(1) size queries.
-	- Added `toList()` to `LinkedQueue` to provide an easy iterable view of the snake body.
-	- Added an overloaded `SnakeGame(long seed)` constructor enabling deterministic JUnit testing without reflection.
-- **Did the model really stand alone?** Yes. All game‑logic tests run successfully without any UI or controller code.
-- **What happened to your unknowns?**
-	- The uncertainty around apple placement on empty cells was resolved by maintaining a `boolean[][] occupied` grid, giving O(1) vacancy checks.
-	- Unknowns concerning terminal redrawing and continuous input remain open for Deliverable 4.
-- **What doesn't work yet?** Visual rendering and keyboard handling are not functional; `TerminalView` and `SnakeController` are still empty stubs.
+- **How did your design absorb the change?** Our "Speed Levels" feature touched `SnakeGame` (adding `getTickDelay()` based on score) and `SnakeController` (timing the game loop with `Thread.sleep()`). This matched our Deliverable 3 prediction perfectly; `LinkedQueue` and `TerminalView` remained entirely untouched.
+- **Did the change cross the model/view line?** No. The view does not know or care about speed; the controller handles the tick timing using the model's exposed state, and the view simply draws when commanded.
+- **What changed from your D3 plan?** Our core plan remained consistent. We implemented Speed Levels as predicted, and added a `currentHead` tracker in `SnakeGame` to resolve a queue-reading bug while preserving standard FIFO Queue operations.
+- **What doesn't work yet?** The core MVP and Speed Levels are fully functional. Due to standard Java console limitations, input requires typing a letter plus Enter, and the terminal display exhibits slight frame clearing flicker between ticks.
 
 ## Next Steps
-- **What is left to finish the MVP?**
-	1. Implement `TerminalView` to render the board and game state.
-	2. Implement `SnakeController` to capture W/A/S/D key inputs.
-	3. Wire a game loop that repeatedly calls `step()` and `draw()`.
-- **Change Feature:** *Speed Levels* – snake speed increases with score.
-	- *Prediction:* Modifications will affect `SnakeGame` (track speed thresholds) and `SnakeController` (adjust loop timing). `TerminalView` and `LinkedQueue` will remain unchanged.
-- **Stretch goals:** Commit to *Speed Levels*; drop *Auto‑Play Mode* and *Saved High Scores* to concentrate on a polished MVP.
-- **New tests needed:**
-	- Tests for `SnakeController` input parsing.
-	- Tests in `SnakeGame` verifying speed variables update at defined score thresholds.
-- **Who does what?**
-	- Avi (Model integration and speed logic)
-	- Brinda (Queue iteration support for view)
-	- Isaac (TerminalView rendering)
-	- Noah (SnakeController input loop)
+- **What is left for the final build?** Final code cleanup, comment polish, and preparation for the 3-minute oral defense demo.
+- **Stretch goals:** We are committing to our completed "Speed Levels" feature. We have dropped "Auto-Play Mode" and "Saved High Scores" to ensure the core MVC architecture remains flawless.
+- **3-Minute Demo Plan:** We will launch the game, demonstrate normal movement via controller inputs, eat multiple apples to show the Speed Level increase, and intentionally crash into a wall to display the Game Over screen.
+- **Who does what?** Avi (Model integration and speed logic), Brinda (Queue iteration and JUnit test suite), Isaac (TerminalView rendering), Noah (SnakeController input loop and game pacing).
 
 ## Attribution
 | Class/Test File | Owner | Contribution |
-|---|---|---|
-| `SnakeGame.java` & `SnakeGameTest.java` | Avi Vohra | Wrote, refactored, and tested via constrained GenAI prompts |
-| `LinkedQueue.java`, `Position.java`, `Direction.java` | Brinda Amidyala | Authored base structures and validated O(1) size accessors |
-| `TerminalView.java` | Isaac Morris | Scaffolded stub class |
-| `SnakeController.java` | Noah Kitatani | Scaffolded stub class |
+| :--- | :--- | :--- |
+| `SnakeGame.java`, `SnakeGameTest.java` | Avi Vohra | Wrote logic, fixed head-tracking bug, integrated speed levels, tested via GenAI. |
+| `LinkedQueue.java`, `Position.java`, `Direction.java` | Brinda Amidyala | Authored base structures, O(1) size management. |
+| `TerminalView.java` | Isaac Morris | Scaffolded UI, implemented grid drawing. |
+| `SnakeController.java` | Noah Kitatani | Scaffolded controller, implemented input thread and speed-paced game loop. |
 
-**GenAI Note:** Generated initial class skeletons and the JUnit test suite with Copilot/Gemini. Prompted to avoid reflection, leading to a seeded constructor for deterministic testing and replacement of O(N) size calculations with O(1) queue size access.
+**GenAI Note:** We used GenAI (Copilot/Gemini) to assist with debugging the FIFO queue head-tracking logic, structuring the game loop thread, and drafting this reflection document.
